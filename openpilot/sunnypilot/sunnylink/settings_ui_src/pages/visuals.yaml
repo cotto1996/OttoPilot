@@ -22,6 +22,66 @@ sections:
     description: Display steering arc on the driving screen when lateral control is enabled.
     visibility:
     - $ref: '#/macros/hide_on_mici'
+  - key: MiciLeadStats
+    widget: toggle
+    title: Lead Stats
+    description: Replace the steering arc with lead distance, speed, and measured time gap.
+    visibility: &mici_only
+    - {type: capability, field: device_type, equals: mici}
+  - key: MiciDynamicDrivingColors
+    widget: toggle
+    title: Dynamic Driving Colors
+    description: Color the selected HUD elements based on active driver assistance and driver overrides.
+    visibility: *mici_only
+  - key: MiciDrivingColorBoth
+    widget: option
+    title: Lateral + Longitudinal Color
+    description: Green (#20D875) is the default.
+    options: &driving_colors
+    - {value: 0x20D875, label: 'Green (#20D875)'}
+    - {value: 0x268FFF, label: 'Blue (#268FFF)'}
+    - {value: 0xF44AB8, label: 'Pink (#F44AB8)'}
+    - {value: 0x9299A3, label: 'Gray (#9299A3)'}
+    - {value: 0x24D4DC, label: 'Cyan (#24D4DC)'}
+    - {value: 0xA986FF, label: 'Purple (#A986FF)'}
+    - {value: 0xFFD363, label: 'Gold (#FFD363)'}
+    - {value: 0xFFFFFF, label: 'White (#FFFFFF)'}
+    visibility: *mici_only
+    enablement: &dynamic_colors_enabled
+    - {type: param, key: MiciDynamicDrivingColors, equals: true}
+  - key: MiciDrivingColorLateral
+    widget: option
+    title: Lateral Only Color
+    description: Blue (#268FFF) is the default.
+    options: *driving_colors
+    visibility: *mici_only
+    enablement: *dynamic_colors_enabled
+  - key: MiciDrivingColorLongitudinal
+    widget: option
+    title: Longitudinal Only Color
+    description: Pink (#F44AB8) is the default.
+    options: *driving_colors
+    visibility: *mici_only
+    enablement: *dynamic_colors_enabled
+  - key: MiciDrivingColorOverride
+    widget: option
+    title: Driver Override Color
+    description: Gray (#9299A3) is the default.
+    options: *driving_colors
+    visibility: *mici_only
+    enablement: *dynamic_colors_enabled
+  - key: MiciColorDrivingPath
+    widget: toggle
+    title: Color Entire Driving Path
+    description: Apply the control state color to the full path in place of the acceleration gradient or rainbow mode.
+    visibility: *mici_only
+    enablement: *dynamic_colors_enabled
+  - key: MiciColorDrivingIndicators
+    widget: toggle
+    title: Color Lead Stats Border and Steering Indicator
+    description: Apply the control state color to the Lead Stats border and the steering wheel icon.
+    visibility: *mici_only
+    enablement: *dynamic_colors_enabled
   - key: ShowTurnSignals
     widget: toggle
     title: Display Turn Signals

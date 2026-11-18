@@ -1375,6 +1375,288 @@
               ]
             },
             {
+              "key": "MiciLeadStats",
+              "widget": "toggle",
+              "title": "Lead Stats",
+              "description": "Replace the steering arc with lead distance, speed, and measured time gap.",
+              "visibility": [
+                {
+                  "type": "capability",
+                  "field": "device_type",
+                  "equals": "mici"
+                }
+              ]
+            },
+            {
+              "key": "MiciDynamicDrivingColors",
+              "widget": "toggle",
+              "title": "Dynamic Driving Colors",
+              "description": "Color the selected HUD elements based on active driver assistance and driver overrides.",
+              "visibility": [
+                {
+                  "type": "capability",
+                  "field": "device_type",
+                  "equals": "mici"
+                }
+              ]
+            },
+            {
+              "key": "MiciDrivingColorBoth",
+              "widget": "option",
+              "title": "Lateral + Longitudinal Color",
+              "description": "Green (#20D875) is the default.",
+              "options": [
+                {
+                  "value": 2152565,
+                  "label": "Green (#20D875)"
+                },
+                {
+                  "value": 2527231,
+                  "label": "Blue (#268FFF)"
+                },
+                {
+                  "value": 16009912,
+                  "label": "Pink (#F44AB8)"
+                },
+                {
+                  "value": 9607587,
+                  "label": "Gray (#9299A3)"
+                },
+                {
+                  "value": 2413788,
+                  "label": "Cyan (#24D4DC)"
+                },
+                {
+                  "value": 11110143,
+                  "label": "Purple (#A986FF)"
+                },
+                {
+                  "value": 16765795,
+                  "label": "Gold (#FFD363)"
+                },
+                {
+                  "value": 16777215,
+                  "label": "White (#FFFFFF)"
+                }
+              ],
+              "visibility": [
+                {
+                  "type": "capability",
+                  "field": "device_type",
+                  "equals": "mici"
+                }
+              ],
+              "enablement": [
+                {
+                  "type": "param",
+                  "key": "MiciDynamicDrivingColors",
+                  "equals": true
+                }
+              ]
+            },
+            {
+              "key": "MiciDrivingColorLateral",
+              "widget": "option",
+              "title": "Lateral Only Color",
+              "description": "Blue (#268FFF) is the default.",
+              "options": [
+                {
+                  "value": 2152565,
+                  "label": "Green (#20D875)"
+                },
+                {
+                  "value": 2527231,
+                  "label": "Blue (#268FFF)"
+                },
+                {
+                  "value": 16009912,
+                  "label": "Pink (#F44AB8)"
+                },
+                {
+                  "value": 9607587,
+                  "label": "Gray (#9299A3)"
+                },
+                {
+                  "value": 2413788,
+                  "label": "Cyan (#24D4DC)"
+                },
+                {
+                  "value": 11110143,
+                  "label": "Purple (#A986FF)"
+                },
+                {
+                  "value": 16765795,
+                  "label": "Gold (#FFD363)"
+                },
+                {
+                  "value": 16777215,
+                  "label": "White (#FFFFFF)"
+                }
+              ],
+              "visibility": [
+                {
+                  "type": "capability",
+                  "field": "device_type",
+                  "equals": "mici"
+                }
+              ],
+              "enablement": [
+                {
+                  "type": "param",
+                  "key": "MiciDynamicDrivingColors",
+                  "equals": true
+                }
+              ]
+            },
+            {
+              "key": "MiciDrivingColorLongitudinal",
+              "widget": "option",
+              "title": "Longitudinal Only Color",
+              "description": "Pink (#F44AB8) is the default.",
+              "options": [
+                {
+                  "value": 2152565,
+                  "label": "Green (#20D875)"
+                },
+                {
+                  "value": 2527231,
+                  "label": "Blue (#268FFF)"
+                },
+                {
+                  "value": 16009912,
+                  "label": "Pink (#F44AB8)"
+                },
+                {
+                  "value": 9607587,
+                  "label": "Gray (#9299A3)"
+                },
+                {
+                  "value": 2413788,
+                  "label": "Cyan (#24D4DC)"
+                },
+                {
+                  "value": 11110143,
+                  "label": "Purple (#A986FF)"
+                },
+                {
+                  "value": 16765795,
+                  "label": "Gold (#FFD363)"
+                },
+                {
+                  "value": 16777215,
+                  "label": "White (#FFFFFF)"
+                }
+              ],
+              "visibility": [
+                {
+                  "type": "capability",
+                  "field": "device_type",
+                  "equals": "mici"
+                }
+              ],
+              "enablement": [
+                {
+                  "type": "param",
+                  "key": "MiciDynamicDrivingColors",
+                  "equals": true
+                }
+              ]
+            },
+            {
+              "key": "MiciDrivingColorOverride",
+              "widget": "option",
+              "title": "Driver Override Color",
+              "description": "Gray (#9299A3) is the default.",
+              "options": [
+                {
+                  "value": 2152565,
+                  "label": "Green (#20D875)"
+                },
+                {
+                  "value": 2527231,
+                  "label": "Blue (#268FFF)"
+                },
+                {
+                  "value": 16009912,
+                  "label": "Pink (#F44AB8)"
+                },
+                {
+                  "value": 9607587,
+                  "label": "Gray (#9299A3)"
+                },
+                {
+                  "value": 2413788,
+                  "label": "Cyan (#24D4DC)"
+                },
+                {
+                  "value": 11110143,
+                  "label": "Purple (#A986FF)"
+                },
+                {
+                  "value": 16765795,
+                  "label": "Gold (#FFD363)"
+                },
+                {
+                  "value": 16777215,
+                  "label": "White (#FFFFFF)"
+                }
+              ],
+              "visibility": [
+                {
+                  "type": "capability",
+                  "field": "device_type",
+                  "equals": "mici"
+                }
+              ],
+              "enablement": [
+                {
+                  "type": "param",
+                  "key": "MiciDynamicDrivingColors",
+                  "equals": true
+                }
+              ]
+            },
+            {
+              "key": "MiciColorDrivingPath",
+              "widget": "toggle",
+              "title": "Color Entire Driving Path",
+              "description": "Apply the control state color to the full path in place of the acceleration gradient or rainbow mode.",
+              "visibility": [
+                {
+                  "type": "capability",
+                  "field": "device_type",
+                  "equals": "mici"
+                }
+              ],
+              "enablement": [
+                {
+                  "type": "param",
+                  "key": "MiciDynamicDrivingColors",
+                  "equals": true
+                }
+              ]
+            },
+            {
+              "key": "MiciColorDrivingIndicators",
+              "widget": "toggle",
+              "title": "Color Lead Stats Border and Steering Indicator",
+              "description": "Apply the control state color to the Lead Stats border and the steering wheel icon.",
+              "visibility": [
+                {
+                  "type": "capability",
+                  "field": "device_type",
+                  "equals": "mici"
+                }
+              ],
+              "enablement": [
+                {
+                  "type": "param",
+                  "key": "MiciDynamicDrivingColors",
+                  "equals": true
+                }
+              ]
+            },
+            {
               "key": "ShowTurnSignals",
               "widget": "toggle",
               "title": "Display Turn Signals",
