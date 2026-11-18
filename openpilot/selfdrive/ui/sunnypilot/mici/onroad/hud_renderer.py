@@ -7,6 +7,7 @@ See the LICENSE.md file in the root directory for more details.
 import pyray as rl
 
 from openpilot.selfdrive.ui.mici.onroad.hud_renderer import HudRenderer
+from openpilot.selfdrive.ui.sunnypilot.mici.onroad.lead_stats import LeadStats
 from openpilot.selfdrive.ui.sunnypilot.onroad.blind_spot_indicators import BlindSpotIndicators
 from openpilot.selfdrive.ui.ui_state import ui_state
 
@@ -16,6 +17,14 @@ class HudRendererSP(HudRenderer):
     super().__init__()
     self.blind_spot_indicators = BlindSpotIndicators()
     self._sp_engaged: bool = False
+    self._lead_stats = LeadStats(self._font_medium, self._font_semi_bold)
+
+  def _draw_torque_slot(self, rect: rl.Rectangle) -> None:
+    if not ui_state.driving_hud_settings.lead_stats:
+      super()._draw_torque_slot(rect)
+    elif self._can_draw_top_icons:
+      self._lead_stats.border_color = self.control_indicator_color
+      self._lead_stats.render(rect)
 
   def _update_state(self) -> None:
     super()._update_state()

@@ -15,6 +15,7 @@ from openpilot.system.ui.lib.shader_polygon import draw_polygon, Gradient
 from openpilot.system.ui.widgets import Widget
 
 from openpilot.selfdrive.ui.sunnypilot.mici.onroad.model_renderer import LANE_LINE_COLORS_SP, ModelRendererSP
+from openpilot.selfdrive.ui.sunnypilot.mici.onroad.control_colors import RGB
 
 CLIP_MARGIN = 500
 MIN_DRAW_DISTANCE = 10.0
@@ -72,6 +73,8 @@ class ModelRenderer(Widget, ModelRendererSP):
     # 3x3 car space -> rect-origin space (draw methods add rect.x/y)
     self._car_space_transform = np.zeros((3, 3), dtype=np.float32)
     self._transform_dirty = True
+    self.use_control_path_color = False
+    self.control_path_color: RGB | None = None
     self._clip_region = None
 
     self._counter = -1
@@ -321,13 +324,22 @@ class ModelRenderer(Widget, ModelRendererSP):
     if not self._path.projected_points.size:
       return
 
-    if ui_state.rainbow_path:
+    path_color = self.control_path_color if self.use_control_path_color else None
+    if path_color is None and ui_state.rainbow_path:
       self.rainbow_path.draw_rainbow_path(self._rect, self._path)
       return
 
     path_pts = self._path.projected_points + np.array([self._rect.x, self._rect.y], dtype=np.float32)
 
-    if ui_state.status == UIStatus.DISENGAGED:
+    if path_color is not None:
+      gradient = Gradient(
+        start=STOCK_PATH_GRADIENT.start,
+        end=STOCK_PATH_GRADIENT.end,
+        colors=[rl.Color(*path_color, color.a) for color in STOCK_PATH_GRADIENT.colors],
+        stops=STOCK_PATH_GRADIENT.stops,
+      )
+      draw_polygon(self._rect, path_pts, gradient=gradient)
+    elif self.use_control_path_color or ui_state.status == UIStatus.DISENGAGED:
       draw_polygon(self._rect, path_pts, rl.Color(0, 0, 0, 90))
     elif not self._longitudinal_control:
       draw_polygon(self._rect, path_pts, gradient=STOCK_PATH_GRADIENT)

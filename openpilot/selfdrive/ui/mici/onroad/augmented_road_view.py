@@ -244,6 +244,15 @@ class AugmentedRoadView(CameraView):
     super()._render(self._content_rect)
 
     # Draw all UI overlays
+    if gui_app.sunnypilot_ui():
+      settings = ui_state.driving_hud_settings
+      cp, cp_sp = ui_state.CP, ui_state.CP_SP
+      has_longitudinal_control = cp is not None and (cp.openpilotLongitudinalControl or (cp_sp is not None and not cp_sp.pcmCruiseSpeed))
+      color = settings.state_color(ui_state.sm, ui_state.started_frame, has_longitudinal_control)
+      self._model_renderer.use_control_path_color = settings.dynamic_colors and settings.color_path
+      self._model_renderer.control_path_color = color
+      self._hud_renderer.control_indicator_color = color if settings.color_indicators else None
+
     self._model_renderer.render(self._content_rect)
 
     # Fade out bottom of overlays for looks

@@ -3,6 +3,7 @@ import pyray as rl
 from dataclasses import dataclass
 from openpilot.common.constants import CV
 from openpilot.selfdrive.ui.mici.onroad.torque_bar import TorqueBar
+from openpilot.selfdrive.ui.sunnypilot.mici.onroad.control_colors import RGB, WHITE
 from openpilot.selfdrive.ui.ui_state import ui_state, UIStatus, ChestnutState
 from openpilot.system.ui.lib.application import gui_app, FontWeight
 from openpilot.system.ui.lib.multilang import tr
@@ -111,6 +112,7 @@ class HudRenderer(Widget):
 
     self._can_draw_top_icons = True
     self._show_wheel_critical = False
+    self.control_indicator_color: RGB | None = None
 
     self._font_bold: rl.Font = gui_app.font(FontWeight.BOLD)
     self._font_medium: rl.Font = gui_app.font(FontWeight.MEDIUM)
@@ -180,7 +182,7 @@ class HudRenderer(Widget):
   def _render(self, rect: rl.Rectangle) -> None:
     """Render HUD elements to the screen."""
 
-    self._torque_bar.render(rect)
+    self._draw_torque_slot(rect)
 
     if self.is_cruise_set:
       self._draw_set_speed(rect)
@@ -188,6 +190,9 @@ class HudRenderer(Widget):
     self._draw_model_source(rect)
 
     self._draw_steering_wheel(rect)
+
+  def _draw_torque_slot(self, rect: rl.Rectangle) -> None:
+    self._torque_bar.render(rect)
 
   def _draw_model_source(self, rect: rl.Rectangle) -> None:
     loading = ui_state.chestnut_state == ChestnutState.LOADING
@@ -249,7 +254,8 @@ class HudRenderer(Widget):
     origin = (wheel_txt.width / 2, wheel_txt.height / 2)
 
     # color and draw
-    color = rl.Color(255, 255, 255, int(self._wheel_alpha_filter.x))
+    rgb = WHITE if self._show_wheel_critical else self.control_indicator_color or WHITE
+    color = rl.Color(*rgb, int(self._wheel_alpha_filter.x))
     rl.draw_texture_pro(wheel_txt, src_rect, dest_rect, origin, rotation, color)
 
     if self._show_wheel_critical:
