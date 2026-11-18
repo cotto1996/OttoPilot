@@ -12,7 +12,7 @@ from openpilot.system.ui.widgets import Widget
 CARD_WIDTH = 224
 CARD_HEIGHT = 58
 MIN_EGO_SPEED_FOR_GAP = 0.5  # m/s
-UNAVAILABLE = "—"
+UNAVAILABLE = "–"
 
 
 def lead_readings(sm, started_frame: int) -> tuple[str, str, str]:
