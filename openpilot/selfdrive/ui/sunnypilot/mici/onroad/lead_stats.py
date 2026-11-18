@@ -55,16 +55,29 @@ class LeadStats(Widget):
     column_width = (width - 12) / 3
     content_x = card.x + 6
     center_y = card.y + CARD_HEIGHT / 2
-    divider_color = rl.Color(border.r, border.g, border.b, 191)
+    divider_tint = border
+    settings = ui_state.driving_hud_settings
+    sm = ui_state.sm
+    if self.border_color is None and settings.dynamic_colors and settings.color_indicators and self._controls_inactive():
+      divider_tint = rl.Color(255, 255, 255, 255)
+    divider_color = rl.Color(divider_tint.r, divider_tint.g, divider_tint.b, 191)
     for boundary in (1, 2):
       x = content_x + boundary * column_width
       rl.draw_rectangle_rec(rl.Rectangle(x - 0.75, center_y - 12, 1.5, 24), divider_color)
 
     icons = (self._draw_car_icon, self._draw_speedometer_icon, self._draw_timer_icon)
-    readings = lead_readings(ui_state.sm, ui_state.started_frame)
+    readings = lead_readings(sm, ui_state.started_frame)
     for i, (draw_icon, reading) in enumerate(zip(icons, readings, strict=True)):
       center_x = content_x + (i + 0.5) * column_width
       self._draw_reading(draw_icon, reading, center_x, center_y, column_width)
+
+  @staticmethod
+  def _controls_inactive() -> bool:
+    sm = ui_state.sm
+    if not all(message_is_current(sm, service, ui_state.started_frame) for service in ("carControl", "carState", "onroadEvents")):
+      return False
+    control = sm["carControl"]
+    return not (control.latActive or control.longActive)
 
   def _draw_reading(self, draw_icon, reading: str, center_x: float, center_y: float, column_width: float) -> None:
     value, _, unit = reading.partition(" ")
