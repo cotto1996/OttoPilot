@@ -259,7 +259,7 @@ class AugmentedRoadView(CameraView):
     rl.draw_texture_ex(self._fade_texture, rl.Vector2(self._content_rect.x, self._content_rect.y), 0.0, 1.0, rl.WHITE)
 
     # Hide DMoji when disengaged unless AlwaysOnDM is enabled
-    top_icons_clear = not self._hud_renderer.drawing_top_icons()
+    top_icons_clear = gui_app.sunnypilot_ui() or not self._hud_renderer.drawing_top_icons()
     if not gui_app.sunnypilot_ui() or ui_state.driving_hud_settings.show_driver_monitoring_icon:
       should_draw_dmoji = top_icons_clear and (ui_state.status != UIStatus.DISENGAGED or ui_state.always_on_dm)
       self._driver_state_renderer.set_should_draw(should_draw_dmoji)

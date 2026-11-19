@@ -54,24 +54,31 @@ class HudRendererSP(HudRenderer):
 
   def _draw_top_icons(self, rect: rl.Rectangle) -> None:
     if not self._can_draw_top_icons:
+      self._set_speed_alpha_filter.x = 0.0
       return
 
     sm = ui_state.sm
-    started = ui_state.started_frame
     metric = ui_state.is_metric
-    center_y = rect.y + 44
-    if self.is_cruise_set and message_is_current(sm, "carState", started):
-      if sm["carState"].vCruiseCluster != 0 or message_is_current(sm, "controlsState", started):
-        speed = round(self.set_speed if metric else self.set_speed * CV.KPH_TO_MPH)
-        center_x = rect.x + rect.width / 2
-        badge = rl.Rectangle(center_x - 43, center_y - 32, 86, 64)
-        rl.draw_rectangle_rounded(badge, 0.3, 10, rl.Color(11, 17, 24, 235))
-        self._draw_speed_text(tr("MAX"), self._font_semi_bold, 12, center_x, center_y - 17, rl.Color(174, 185, 199, 255))
-        self._draw_speed_text(str(speed), self._font_bold, 32, center_x, center_y + 10, rl.WHITE)
-
-    limit = posted_speed_limit(sm, started, metric)
+    self._draw_set_speed(rect)
+    limit = posted_speed_limit(sm, ui_state.started_frame, metric)
     if limit is not None:
-      self._draw_speed_limit(rect.x + rect.width - 44, center_y, str(limit), metric)
+      self._draw_speed_limit(rect.x + rect.width - 44, rect.y + 44, str(limit), metric)
+
+  def _draw_set_speed(self, rect: rl.Rectangle) -> None:
+    sm = ui_state.sm
+    started = ui_state.started_frame
+    has_speed = (self.is_cruise_set and message_is_current(sm, "carState", started) and
+                 (sm["carState"].vCruiseCluster != 0 or message_is_current(sm, "controlsState", started)))
+    alpha = self._set_speed_alpha_filter.update(has_speed and self._set_speed_recent())
+    if not has_speed or alpha < 1e-2:
+      return
+
+    speed = str(round(self.set_speed if ui_state.is_metric else self.set_speed * CV.KPH_TO_MPH))
+    x, y = rect.x + rect.width / 2, rect.y + 44
+    rl.draw_circle_gradient(rl.Vector2(x, y), 44, rl.Color(0, 0, 0, int(128 * alpha)), rl.BLANK)
+    tint = rl.Color(255, 255, 255, int(230 * alpha))
+    self._draw_speed_text(speed, self._font_display, 34 if len(speed) == 3 else 43, x, y - 8, tint)
+    self._draw_speed_text(tr("MAX"), self._font_semi_bold, 14, x, y + 23, tint)
 
   def _draw_speed_limit(self, x: float, y: float, text: str, metric: bool) -> None:
     if metric:

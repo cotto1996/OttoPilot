@@ -277,10 +277,12 @@ class HudRenderer(Widget):
   def _steering_wheel_rgb(self) -> RGB:
     return WHITE
 
+  def _set_speed_recent(self) -> bool:
+    return self._engaged and 0 < rl.get_time() - self._set_speed_changed_time < SET_SPEED_PERSISTENCE
+
   def _draw_set_speed(self, rect: rl.Rectangle) -> None:
     """Draw the MAX speed indicator box."""
-    alpha = self._set_speed_alpha_filter.update(0 < rl.get_time() - self._set_speed_changed_time < SET_SPEED_PERSISTENCE and
-                                                self._can_draw_top_icons and self._engaged)
+    alpha = self._set_speed_alpha_filter.update(self._can_draw_top_icons and self._set_speed_recent())
     if alpha < 1e-2:
       return
 
