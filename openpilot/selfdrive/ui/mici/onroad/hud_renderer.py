@@ -184,12 +184,15 @@ class HudRenderer(Widget):
 
     self._draw_torque_slot(rect)
 
-    if self.is_cruise_set:
-      self._draw_set_speed(rect)
+    self._draw_top_icons(rect)
 
     self._draw_model_source(rect)
 
     self._draw_steering_wheel(rect)
+
+  def _draw_top_icons(self, rect: rl.Rectangle) -> None:
+    if self.is_cruise_set:
+      self._draw_set_speed(rect)
 
   def _draw_torque_slot(self, rect: rl.Rectangle) -> None:
     self._torque_bar.render(rect)

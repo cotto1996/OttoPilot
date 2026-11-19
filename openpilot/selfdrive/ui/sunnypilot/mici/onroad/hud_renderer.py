@@ -4,14 +4,29 @@ Copyright (c) 2021-, Haibin Wen, sunnypilot, and a number of other contributors.
 This file is part of sunnypilot and is licensed under the MIT License.
 See the LICENSE.md file in the root directory for more details.
 """
+import math
+
 import pyray as rl
 
+from openpilot.common.constants import CV
 from openpilot.selfdrive.ui.mici.onroad.hud_renderer import HudRenderer
-from openpilot.selfdrive.ui.sunnypilot.mici.onroad.control_colors import RGB, acceleration_wheel_color
+from openpilot.selfdrive.ui.sunnypilot.mici.onroad.control_colors import RGB, acceleration_wheel_color, message_is_current
 from openpilot.selfdrive.ui.sunnypilot.mici.onroad.lead_stats import LeadStats
 from openpilot.selfdrive.ui.sunnypilot.onroad.blind_spot_indicators import BlindSpotIndicators
 from openpilot.selfdrive.ui.ui_state import ui_state
 from openpilot.system.ui.lib.application import FontWeight, gui_app
+from openpilot.system.ui.lib.multilang import tr
+from openpilot.system.ui.lib.text_measure import measure_text_cached
+
+
+def posted_speed_limit(sm, started_frame: int, is_metric: bool) -> int | None:
+  if not message_is_current(sm, "longitudinalPlanSP", started_frame):
+    return None
+  resolver = sm["longitudinalPlanSP"].speedLimit.resolver
+  if not resolver.speedLimitValid or not math.isfinite(resolver.speedLimit):
+    return None
+  limit = round(resolver.speedLimit * (CV.MS_TO_KPH if is_metric else CV.MS_TO_MPH))
+  return limit if 0 < limit < 1000 else None
 
 
 class HudRendererSP(HudRenderer):
@@ -35,9 +50,47 @@ class HudRendererSP(HudRenderer):
     # Keep the original steering warning placement and leave the alert area clear.
     if self._show_wheel_critical or not self._can_draw_top_icons:
       return super()._steering_wheel_position(rect, wheel_width, wheel_height)
-    if self.drawing_top_icons():
-      return rect.x + rect.width - 46, rect.y + 53
     return rect.x + 46, rect.y + (116 if ui_state.driving_hud_settings.show_driver_monitoring_icon else 40)
+
+  def _draw_top_icons(self, rect: rl.Rectangle) -> None:
+    if not self._can_draw_top_icons:
+      return
+
+    sm = ui_state.sm
+    started = ui_state.started_frame
+    metric = ui_state.is_metric
+    center_y = rect.y + 44
+    if self.is_cruise_set and message_is_current(sm, "carState", started):
+      if sm["carState"].vCruiseCluster != 0 or message_is_current(sm, "controlsState", started):
+        speed = round(self.set_speed if metric else self.set_speed * CV.KPH_TO_MPH)
+        center_x = rect.x + rect.width / 2
+        badge = rl.Rectangle(center_x - 43, center_y - 32, 86, 64)
+        rl.draw_rectangle_rounded(badge, 0.3, 10, rl.Color(11, 17, 24, 235))
+        self._draw_speed_text(tr("MAX"), self._font_semi_bold, 12, center_x, center_y - 17, rl.Color(174, 185, 199, 255))
+        self._draw_speed_text(str(speed), self._font_bold, 32, center_x, center_y + 10, rl.WHITE)
+
+    limit = posted_speed_limit(sm, started, metric)
+    if limit is not None:
+      self._draw_speed_limit(rect.x + rect.width - 44, center_y, str(limit), metric)
+
+  def _draw_speed_limit(self, x: float, y: float, text: str, metric: bool) -> None:
+    if metric:
+      rl.draw_circle_v(rl.Vector2(x, y), 31, rl.WHITE)
+      rl.draw_ring(rl.Vector2(x, y), 25, 31, 0, 360, 32, rl.Color(215, 37, 45, 255))
+      self._draw_speed_text(text, self._font_bold, 21 if len(text) == 3 else 27, x, y, rl.BLACK)
+      return
+
+    sign = rl.Rectangle(x - 32, y - 32, 64, 64)
+    rl.draw_rectangle_rounded(sign, 0.18, 8, rl.WHITE)
+    inner = rl.Rectangle(sign.x + 3, sign.y + 3, 58, 58)
+    rl.draw_rectangle_rounded_lines_ex(inner, 0.13, 8, 1.5, rl.BLACK)
+    self._draw_speed_text("SPEED LIMIT", self._font_semi_bold, 7, x, y - 18, rl.BLACK)
+    self._draw_speed_text(text, self._font_bold, 24 if len(text) == 3 else 32, x, y + 9, rl.BLACK)
+
+  @staticmethod
+  def _draw_speed_text(text: str, font: rl.Font, size: int, x: float, y: float, color: rl.Color) -> None:
+    bounds = measure_text_cached(font, text, size)
+    rl.draw_text_ex(font, text, rl.Vector2(x - bounds.x / 2, y - bounds.y / 2), size, 0, color)
 
   def _model_source_y(self, rect: rl.Rectangle, icon_height: int) -> float:
     if ui_state.driving_hud_settings.lead_stats and self._show_lead_stats():

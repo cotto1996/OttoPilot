@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pyray as rl
 
 from openpilot.selfdrive.ui.sunnypilot.mici.onroad.control_colors import WHITE, DrivingHudSettings, acceleration_wheel_color
+from openpilot.selfdrive.ui.sunnypilot.mici.onroad.hud_renderer import posted_speed_limit
 from openpilot.selfdrive.ui.sunnypilot.mici.onroad.lead_stats import UNAVAILABLE, LeadStats, lead_readings
 
 
@@ -18,6 +19,7 @@ class DrivingMessages(dict):
       carState=SimpleNamespace(steeringPressed=False, vEgo=20.0),
       onroadEvents=[],
       radarState=SimpleNamespace(leadOne=SimpleNamespace(present=True, dRel=30.0, vLead=20.0)),
+      longitudinalPlanSP=SimpleNamespace(speedLimit=SimpleNamespace(resolver=SimpleNamespace(speedLimit=25.0, speedLimitValid=True))),
       selfdriveStateSP=SimpleNamespace(mads=SimpleNamespace(available=True, enabled=True, state="enabled")),
     )
     self.alive = dict.fromkeys(self, True)
@@ -26,6 +28,23 @@ class DrivingMessages(dict):
 
 
 class TestDrivingHud(unittest.TestCase):
+  def test_posted_speed_limit_uses_current_valid_data_and_display_units(self):
+    sm = DrivingMessages()
+    assert posted_speed_limit(sm, STARTED_FRAME, False) == 56
+    assert posted_speed_limit(sm, STARTED_FRAME, True) == 90
+
+    resolver = sm["longitudinalPlanSP"].speedLimit.resolver
+    resolver.speedLimitValid = False
+    assert posted_speed_limit(sm, STARTED_FRAME, False) is None
+    resolver.speedLimitValid = True
+    resolver.speedLimit = float("nan")
+    assert posted_speed_limit(sm, STARTED_FRAME, False) is None
+    resolver.speedLimit = 0.0
+    assert posted_speed_limit(sm, STARTED_FRAME, False) is None
+    resolver.speedLimit = 25.0
+    sm.recv_frame["longitudinalPlanSP"] = STARTED_FRAME - 1
+    assert posted_speed_limit(sm, STARTED_FRAME, False) is None
+
   def test_lead_card_uses_the_camera_viewport(self):
     for width, height in ((476, 72), (275, 58)):
       with self.subTest(width=width):
