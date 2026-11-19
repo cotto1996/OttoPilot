@@ -1388,6 +1388,19 @@
               ]
             },
             {
+              "key": "MiciShowDriverMonitoringIcon",
+              "widget": "toggle",
+              "title": "Show Driver Monitoring Icon",
+              "description": "Display the driver monitoring icon in the top-left corner of the driving screen.",
+              "visibility": [
+                {
+                  "type": "capability",
+                  "field": "device_type",
+                  "equals": "mici"
+                }
+              ]
+            },
+            {
               "key": "MiciDynamicDrivingColors",
               "widget": "toggle",
               "title": "Dynamic Driving Colors",

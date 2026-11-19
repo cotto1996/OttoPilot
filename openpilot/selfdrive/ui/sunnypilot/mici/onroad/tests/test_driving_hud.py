@@ -2,8 +2,10 @@ import unittest
 from dataclasses import replace
 from types import SimpleNamespace
 
+import pyray as rl
+
 from openpilot.selfdrive.ui.sunnypilot.mici.onroad.control_colors import WHITE, DrivingHudSettings, acceleration_wheel_color
-from openpilot.selfdrive.ui.sunnypilot.mici.onroad.lead_stats import UNAVAILABLE, lead_readings
+from openpilot.selfdrive.ui.sunnypilot.mici.onroad.lead_stats import UNAVAILABLE, LeadStats, lead_readings
 
 
 STARTED_FRAME = 10
@@ -24,6 +26,14 @@ class DrivingMessages(dict):
 
 
 class TestDrivingHud(unittest.TestCase):
+  def test_lead_card_uses_the_camera_viewport(self):
+    for width, height in ((476, 72), (275, 58)):
+      with self.subTest(width=width):
+        card = LeadStats.card_bounds(rl.Rectangle(25, 5, width, 240))
+        assert card is not None
+        assert (card.x, card.width, card.height, card.y + card.height) == (37, width - 24, height, 231)
+    assert LeadStats.card_bounds(rl.Rectangle(0, 0, 100, 240)) is None
+
   def test_wheel_color_follows_measured_acceleration(self):
     sm = DrivingMessages()
     for acceleration, color in ((0.5, (67, 224, 135)), (-0.5, (245, 70, 70)), (0.05, WHITE), (float("inf"), WHITE)):

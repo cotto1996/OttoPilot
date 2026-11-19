@@ -34,6 +34,7 @@ def acceleration_wheel_color(sm, started_frame: int) -> RGB:
 @dataclass(frozen=True)
 class DrivingHudSettings:
   lead_stats: bool = True
+  show_driver_monitoring_icon: bool = True
   dynamic_colors: bool = True
   color_path: bool = True
   color_indicators: bool = True
@@ -50,6 +51,7 @@ class DrivingHudSettings:
 
     return cls(
       lead_stats=bool(params.get("MiciLeadStats", return_default=True)),
+      show_driver_monitoring_icon=bool(params.get("MiciShowDriverMonitoringIcon", return_default=True)),
       dynamic_colors=bool(params.get("MiciDynamicDrivingColors", return_default=True)),
       color_path=bool(params.get("MiciColorDrivingPath", return_default=True)),
       color_indicators=bool(params.get("MiciColorDrivingIndicators", return_default=True)),

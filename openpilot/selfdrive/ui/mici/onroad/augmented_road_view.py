@@ -177,7 +177,7 @@ class AugmentedRoadView(CameraView):
     self._navigation = NavigationPanel()
     self._model_renderer = ModelRenderer()
     self._hud_renderer = HudRenderer()
-    self._long_indicator = LongIndicator()
+    self._long_indicator = None if gui_app.sunnypilot_ui() else LongIndicator()
     self._alert_renderer = AlertRenderer()
     self._driver_state_renderer = DriverStateRenderer()
     self._confidence_ball = ConfidenceBall()
@@ -259,13 +259,15 @@ class AugmentedRoadView(CameraView):
     rl.draw_texture_ex(self._fade_texture, rl.Vector2(self._content_rect.x, self._content_rect.y), 0.0, 1.0, rl.WHITE)
 
     # Hide DMoji when disengaged unless AlwaysOnDM is enabled
-    should_draw_dmoji = (not self._hud_renderer.drawing_top_icons() and
-                         (ui_state.status != UIStatus.DISENGAGED or ui_state.always_on_dm))
-    self._driver_state_renderer.set_should_draw(should_draw_dmoji)
-    self._driver_state_renderer.set_position(self._rect.x + 16, self._rect.y + 10)
-    self._driver_state_renderer.render()
-    self._long_indicator.set_should_draw(not self._hud_renderer.drawing_top_icons())
-    self._long_indicator.render(self._content_rect)
+    top_icons_clear = not self._hud_renderer.drawing_top_icons()
+    if not gui_app.sunnypilot_ui() or ui_state.driving_hud_settings.show_driver_monitoring_icon:
+      should_draw_dmoji = top_icons_clear and (ui_state.status != UIStatus.DISENGAGED or ui_state.always_on_dm)
+      self._driver_state_renderer.set_should_draw(should_draw_dmoji)
+      self._driver_state_renderer.set_position(self._rect.x + 16, self._rect.y + 10)
+      self._driver_state_renderer.render()
+    if self._long_indicator is not None:
+      self._long_indicator.set_should_draw(top_icons_clear)
+      self._long_indicator.render(self._content_rect)
 
     self._hud_renderer.set_can_draw_top_icons(alert_to_render is None)
     self._hud_renderer.set_wheel_critical_icon(alert_to_render is not None and not not_animating_out and

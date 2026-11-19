@@ -10,10 +10,9 @@ from openpilot.system.ui.lib.text_measure import measure_text_cached
 from openpilot.system.ui.widgets import Widget
 
 
-SIDE_HUD_CLEARANCE = 98
-LONG_INDICATOR_CLEARANCE = 88
-CARD_WIDTH = 280
-CARD_HEIGHT = 64
+CARD_EDGE_MARGIN = 12
+CARD_BOTTOM_MARGIN = 14
+MAX_CARD_HEIGHT = 72
 MIN_EGO_SPEED_FOR_GAP = 0.5  # m/s
 UNAVAILABLE = "–"
 
@@ -43,38 +42,37 @@ class LeadStats(Widget):
     self._value_font = value_font
     self.border_color: RGB | None = None
 
+  @staticmethod
+  def card_bounds(rect: rl.Rectangle):
+    width = rect.width - 2 * CARD_EDGE_MARGIN
+    height = min(MAX_CARD_HEIGHT, round(width * 0.23))
+    if width < 156 or rect.height < height + CARD_BOTTOM_MARGIN:
+      return None
+    return rl.Rectangle(rect.x + CARD_EDGE_MARGIN, rect.y + rect.height - height - CARD_BOTTOM_MARGIN, width, height)
+
   def _render(self, rect: rl.Rectangle) -> None:
-    narrow = rect.width - 2 * SIDE_HUD_CLEARANCE < 240
-    # Navigation leaves room beside the left-side following indicator and above
-    # the wheel and model-status icons. The wide layout fits between those icons.
-    left = LONG_INDICATOR_CLEARANCE if narrow else SIDE_HUD_CLEARANCE
-    right = 12 if narrow else SIDE_HUD_CLEARANCE
-    available = rect.width - left - right
-    width = min(CARD_WIDTH, available)
-    height = 52 if narrow else CARD_HEIGHT
-    bottom_margin = 77 if narrow else 14
-    if width < 156 or rect.height < height + bottom_margin:
+    card = self.card_bounds(rect)
+    if card is None:
       return
 
-    card = rl.Rectangle(rect.x + left + (available - width) / 2, rect.y + rect.height - height - bottom_margin, width, height)
     rl.draw_rectangle_rounded(card, 0.34, 12, rl.Color(11, 17, 24, 235))
     border = rl.Color(*self.border_color, 255) if self.border_color is not None else rl.Color(86, 95, 108, 255)
     rl.draw_rectangle_rounded_lines_ex(card, 0.34, 12, 1.5, border)
 
-    inset = 3 if narrow else 8
-    column_width = (width - 2 * inset) / 3
+    inset = 8
+    column_width = (card.width - 2 * inset) / 3
     content_x = card.x + inset
-    center_y = card.y + height / 2
+    center_y = card.y + card.height / 2
     divider_color = rl.Color(border.r, border.g, border.b, 191)
-    divider_height = height - 20
+    divider_height = card.height - 20
     for boundary in (1, 2):
       x = content_x + boundary * column_width
       rl.draw_rectangle_rec(rl.Rectangle(x - 0.75, center_y - divider_height / 2, 1.5, divider_height), divider_color)
 
     icons = (self._draw_car_icon, self._draw_speedometer_icon, self._draw_timer_icon)
     readings = lead_readings(ui_state.sm, ui_state.started_frame)
-    font_size = 22 if narrow else 28
-    unit_size = 10 if narrow else 13
+    font_size = min(42, max(18, int(card.width / 9)))
+    unit_size = min(16, max(10, font_size // 2 - 2))
     _, digit_height = self._digit_metrics(self._value_font, font_size)
     baseline_y = center_y + digit_height / 2
     for i, (draw_icon, reading) in enumerate(zip(icons, readings, strict=True)):

@@ -216,9 +216,11 @@ class HudRenderer(Widget):
     if alpha < 1e-2:
       return
 
-    pos = rl.Vector2(rect.x + rect.width - 10 - icon.width,
-                     rect.y + rect.height - 14 - (self._txt_wheel.height + icon.height) / 2)
+    pos = rl.Vector2(rect.x + rect.width - 10 - icon.width, self._model_source_y(rect, icon.height))
     rl.draw_texture_ex(icon, pos, 0.0, 1.0, rl.Color(255, 255, 255, int(255 * opacity * alpha)))
+
+  def _model_source_y(self, rect: rl.Rectangle, icon_height: int) -> float:
+    return rect.y + rect.height - 14 - (self._txt_wheel.height + icon_height) / 2
 
   def _draw_steering_wheel(self, rect: rl.Rectangle) -> None:
     wheel_txt = self._txt_wheel_critical if self._show_wheel_critical else self._txt_wheel
@@ -237,8 +239,8 @@ class HudRenderer(Widget):
         self._wheel_y_filter.update(0)
 
     # pos
-    pos_x = int(rect.x + 21 + wheel_txt.width / 2)
-    pos_y = int(rect.y + rect.height - 14 - wheel_txt.height / 2 + self._wheel_y_filter.x)
+    wheel_x, wheel_y = self._steering_wheel_position(rect, wheel_txt.width, wheel_txt.height)
+    pos_x, pos_y = int(wheel_x), int(wheel_y)
     rotation = -ui_state.sm['carState'].steeringAngleDeg
 
     turn_intent_margin = 25
@@ -264,6 +266,10 @@ class HudRenderer(Widget):
       exclamation_pos_x = pos_x - self._txt_exclamation_point.width / 2 + wheel_txt.width / 2 + EXCLAMATION_POINT_SPACING
       exclamation_pos_y = pos_y - self._txt_exclamation_point.height / 2
       rl.draw_texture_ex(self._txt_exclamation_point, rl.Vector2(exclamation_pos_x, exclamation_pos_y), 0.0, 1.0, rl.WHITE)
+
+  def _steering_wheel_position(self, rect: rl.Rectangle, wheel_width: int, wheel_height: int) -> tuple[float, float]:
+    return (rect.x + 21 + wheel_width / 2,
+            rect.y + rect.height - 14 - wheel_height / 2 + self._wheel_y_filter.x)
 
   def _steering_wheel_rgb(self) -> RGB:
     return WHITE

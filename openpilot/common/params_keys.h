@@ -190,6 +190,7 @@ inline static std::unordered_map<std::string, ParamKeyAttributes> keys = {
     {"MiciDrivingColorOverride", {PERSISTENT | BACKUP, INT, "9607587"}},
     {"MiciDynamicDrivingColors", {PERSISTENT | BACKUP, BOOL, "1"}},
     {"MiciLeadStats", {PERSISTENT | BACKUP, BOOL, "1"}},
+    {"MiciShowDriverMonitoringIcon", {PERSISTENT | BACKUP, BOOL, "1"}},
     {"ModelRunnerTypeCache", {CLEAR_ON_ONROAD_TRANSITION, INT}},
     {"OffroadMode", {CLEAR_ON_MANAGER_START, BOOL}},
     {"Offroad_TiciSupport", {CLEAR_ON_MANAGER_START, JSON}},
