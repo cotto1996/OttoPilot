@@ -28,11 +28,6 @@ sections:
     description: Replace the steering arc with lead distance, speed, and measured time gap.
     visibility: &mici_only
     - {type: capability, field: device_type, equals: mici}
-  - key: MiciShowDriverMonitoringIcon
-    widget: toggle
-    title: Show Driver Monitoring Icon
-    description: Display the driver monitoring icon in the top-left corner of the driving screen.
-    visibility: *mici_only
   - key: MiciDynamicDrivingColors
     widget: toggle
     title: Dynamic Driving Colors

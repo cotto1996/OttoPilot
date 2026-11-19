@@ -1388,19 +1388,6 @@
               ]
             },
             {
-              "key": "MiciShowDriverMonitoringIcon",
-              "widget": "toggle",
-              "title": "Show Driver Monitoring Icon",
-              "description": "Display the driver monitoring icon in the top-left corner of the driving screen.",
-              "visibility": [
-                {
-                  "type": "capability",
-                  "field": "device_type",
-                  "equals": "mici"
-                }
-              ]
-            },
-            {
               "key": "MiciDynamicDrivingColors",
               "widget": "toggle",
               "title": "Dynamic Driving Colors",
@@ -1885,6 +1872,19 @@
               "widget": "toggle",
               "title": "Always-On Driver Monitoring",
               "description": "Enable driver monitoring even when sunnypilot is not engaged."
+            },
+            {
+              "key": "MiciShowDriverMonitoringIcon",
+              "widget": "toggle",
+              "title": "Show Driver Monitoring Icon",
+              "description": "Display the driver monitoring icon in the top-left corner of the driving screen.",
+              "visibility": [
+                {
+                  "type": "capability",
+                  "field": "device_type",
+                  "equals": "mici"
+                }
+              ]
             },
             {
               "key": "IsMetric",
