@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pyray as rl
 
 from openpilot.selfdrive.ui.sunnypilot.mici.onroad.control_colors import WHITE, DrivingHudSettings, acceleration_wheel_color
-from openpilot.selfdrive.ui.sunnypilot.mici.onroad.hud_renderer import posted_speed_limit
+from openpilot.selfdrive.ui.sunnypilot.mici.onroad.hud_renderer import actual_speed_mph, blendful_correction_level, posted_speed_limit
 from openpilot.selfdrive.ui.sunnypilot.mici.onroad.lead_stats import UNAVAILABLE, LeadStats, lead_readings
 
 
@@ -17,6 +17,7 @@ class DrivingMessages(dict):
     super().__init__(
       carControl=SimpleNamespace(enabled=True, latActive=True, longActive=True),
       carState=SimpleNamespace(steeringPressed=False, vEgo=20.0),
+      modelDataV2SP=SimpleNamespace(blendfulCurvature=0.0),
       onroadEvents=[],
       radarState=SimpleNamespace(leadOne=SimpleNamespace(present=True, dRel=30.0, vLead=20.0)),
       longitudinalPlanSP=SimpleNamespace(speedLimit=SimpleNamespace(resolver=SimpleNamespace(speedLimit=25.0, speedLimitValid=True))),
@@ -28,6 +29,49 @@ class DrivingMessages(dict):
 
 
 class TestDrivingHud(unittest.TestCase):
+  def test_actual_speed_uses_ego_speed_in_mph(self):
+    sm = DrivingMessages()
+    sm["carState"].vEgoCluster = 21.0
+    sm["carState"].vCruiseCluster = 100.0
+    assert actual_speed_mph(sm, STARTED_FRAME) == 45
+    sm["carState"].vEgo = 0.0
+    assert actual_speed_mph(sm, STARTED_FRAME) == 0
+    sm["carState"].vEgo = float("nan")
+    assert actual_speed_mph(sm, STARTED_FRAME) is None
+    sm["carState"].vEgo = 20.0
+    sm.recv_frame["carState"] = STARTED_FRAME - 1
+    assert actual_speed_mph(sm, STARTED_FRAME) is None
+
+  def test_blendful_uses_signed_curvature_and_separate_release_thresholds(self):
+    sm = DrivingMessages()
+    for pull, previous, expected in (
+      (0.04, 0, 0), (0.04, 1, 1), (0.03, 1, 0), (0.09, 0, 1), (0.18, 0, 2), (0.31, 0, 3),
+      (0.27, 3, 3), (0.27, 0, 2), (0.13, 2, 2), (0.11, 2, 1),
+      (-0.27, 3, -2), (-0.32, 0, -3), (-0.17, 0, -2), (-0.07, 0, -1), (-0.04, 1, 0),
+    ):
+      with self.subTest(pull=pull, previous=previous):
+        sm["modelDataV2SP"].blendfulCurvature = 2 * pull / 30 ** 2
+        assert blendful_correction_level(sm, STARTED_FRAME, previous) == expected
+
+  def test_blendful_requires_current_lateral_control_and_telemetry(self):
+    sm = DrivingMessages()
+    model = sm["modelDataV2SP"]
+    model.blendfulCurvature = 0.001
+    assert blendful_correction_level(sm, STARTED_FRAME, 0) == 3
+    sm["carControl"].latActive = False
+    assert blendful_correction_level(sm, STARTED_FRAME, 3) == 0
+    sm["carControl"].latActive = True
+    for service in ("carState", "carControl", "modelDataV2SP"):
+      with self.subTest(service=service):
+        sm.alive[service] = False
+        assert blendful_correction_level(sm, STARTED_FRAME, 3) == 0
+        sm.alive[service] = True
+    sm["carState"].vEgo = 4.0
+    assert blendful_correction_level(sm, STARTED_FRAME, 3) == 0
+    sm["carState"].vEgo = 20.0
+    model.blendfulCurvature = float("inf")
+    assert blendful_correction_level(sm, STARTED_FRAME, 3) == 0
+
   def test_posted_speed_limit_uses_current_valid_data_and_display_units(self):
     sm = DrivingMessages()
     assert posted_speed_limit(sm, STARTED_FRAME, False) == 56
