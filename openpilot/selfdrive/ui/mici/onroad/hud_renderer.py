@@ -112,7 +112,7 @@ class HudRenderer(Widget):
 
     self._can_draw_top_icons = True
     self._show_wheel_critical = False
-    self.control_indicator_color: RGB | None = None
+    self.lead_stats_border_color: RGB | None = None
 
     self._font_bold: rl.Font = gui_app.font(FontWeight.BOLD)
     self._font_medium: rl.Font = gui_app.font(FontWeight.MEDIUM)
@@ -254,7 +254,7 @@ class HudRenderer(Widget):
     origin = (wheel_txt.width / 2, wheel_txt.height / 2)
 
     # color and draw
-    rgb = WHITE if self._show_wheel_critical else self.control_indicator_color or WHITE
+    rgb = WHITE if self._show_wheel_critical else self._steering_wheel_rgb()
     color = rl.Color(*rgb, int(self._wheel_alpha_filter.x))
     rl.draw_texture_pro(wheel_txt, src_rect, dest_rect, origin, rotation, color)
 
@@ -264,6 +264,9 @@ class HudRenderer(Widget):
       exclamation_pos_x = pos_x - self._txt_exclamation_point.width / 2 + wheel_txt.width / 2 + EXCLAMATION_POINT_SPACING
       exclamation_pos_y = pos_y - self._txt_exclamation_point.height / 2
       rl.draw_texture_ex(self._txt_exclamation_point, rl.Vector2(exclamation_pos_x, exclamation_pos_y), 0.0, 1.0, rl.WHITE)
+
+  def _steering_wheel_rgb(self) -> RGB:
+    return WHITE
 
   def _draw_set_speed(self, rect: rl.Rectangle) -> None:
     """Draw the MAX speed indicator box."""

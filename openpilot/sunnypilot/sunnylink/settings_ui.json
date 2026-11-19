@@ -1639,8 +1639,8 @@
             {
               "key": "MiciColorDrivingIndicators",
               "widget": "toggle",
-              "title": "Color Lead Stats Border and Steering Indicator",
-              "description": "Apply the control state color to the Lead Stats border and the steering wheel icon.",
+              "title": "Color Lead Stats Border",
+              "description": "Apply the control state color to the Lead Stats border and dividers.",
               "visibility": [
                 {
                   "type": "capability",

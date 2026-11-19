@@ -5,12 +5,15 @@ import pyray as rl
 from openpilot.common.constants import CV
 from openpilot.selfdrive.ui.sunnypilot.mici.onroad.control_colors import RGB, message_is_current
 from openpilot.selfdrive.ui.ui_state import ui_state
+from openpilot.system.ui.lib.application import FONT_SCALE, font_fallback
 from openpilot.system.ui.lib.text_measure import measure_text_cached
 from openpilot.system.ui.widgets import Widget
 
 
-CARD_WIDTH = 224
-CARD_HEIGHT = 40
+SIDE_HUD_CLEARANCE = 98
+LONG_INDICATOR_CLEARANCE = 88
+CARD_WIDTH = 280
+CARD_HEIGHT = 64
 MIN_EGO_SPEED_FOR_GAP = 0.5  # m/s
 UNAVAILABLE = "–"
 
@@ -41,70 +44,94 @@ class LeadStats(Widget):
     self.border_color: RGB | None = None
 
   def _render(self, rect: rl.Rectangle) -> None:
-    width = min(CARD_WIDTH, rect.width - 32)
-    if width < 180:
+    narrow = rect.width - 2 * SIDE_HUD_CLEARANCE < 240
+    # Navigation leaves room beside the left-side following indicator and above
+    # the wheel and model-status icons. The wide layout fits between those icons.
+    left = LONG_INDICATOR_CLEARANCE if narrow else SIDE_HUD_CLEARANCE
+    right = 12 if narrow else SIDE_HUD_CLEARANCE
+    available = rect.width - left - right
+    width = min(CARD_WIDTH, available)
+    height = 52 if narrow else CARD_HEIGHT
+    bottom_margin = 77 if narrow else 14
+    if width < 156 or rect.height < height + bottom_margin:
       return
 
-    # Lift the card above the bottom HUD icons when navigation narrows the camera view.
-    bottom_margin = 72 if rect.width < CARD_WIDTH + 160 else 14
-    card = rl.Rectangle(rect.x + (rect.width - width) / 2, rect.y + rect.height - CARD_HEIGHT - bottom_margin, width, CARD_HEIGHT)
+    card = rl.Rectangle(rect.x + left + (available - width) / 2, rect.y + rect.height - height - bottom_margin, width, height)
     rl.draw_rectangle_rounded(card, 0.34, 12, rl.Color(11, 17, 24, 235))
     border = rl.Color(*self.border_color, 255) if self.border_color is not None else rl.Color(86, 95, 108, 255)
     rl.draw_rectangle_rounded_lines_ex(card, 0.34, 12, 1.5, border)
 
-    column_width = (width - 12) / 3
-    content_x = card.x + 6
-    center_y = card.y + CARD_HEIGHT / 2
-    divider_tint = border
-    settings = ui_state.driving_hud_settings
-    sm = ui_state.sm
-    if self.border_color is None and settings.dynamic_colors and settings.color_indicators and self._controls_inactive():
-      divider_tint = rl.Color(255, 255, 255, 255)
-    divider_color = rl.Color(divider_tint.r, divider_tint.g, divider_tint.b, 191)
+    inset = 3 if narrow else 8
+    column_width = (width - 2 * inset) / 3
+    content_x = card.x + inset
+    center_y = card.y + height / 2
+    divider_color = rl.Color(border.r, border.g, border.b, 191)
+    divider_height = height - 20
     for boundary in (1, 2):
       x = content_x + boundary * column_width
-      rl.draw_rectangle_rec(rl.Rectangle(x - 0.75, center_y - 12, 1.5, 24), divider_color)
+      rl.draw_rectangle_rec(rl.Rectangle(x - 0.75, center_y - divider_height / 2, 1.5, divider_height), divider_color)
 
     icons = (self._draw_car_icon, self._draw_speedometer_icon, self._draw_timer_icon)
-    readings = lead_readings(sm, ui_state.started_frame)
+    readings = lead_readings(ui_state.sm, ui_state.started_frame)
+    font_size = 22 if narrow else 28
+    unit_size = 10 if narrow else 13
+    _, digit_height = self._digit_metrics(self._value_font, font_size)
+    baseline_y = center_y + digit_height / 2
     for i, (draw_icon, reading) in enumerate(zip(icons, readings, strict=True)):
       center_x = content_x + (i + 0.5) * column_width
-      self._draw_reading(draw_icon, reading, center_x, center_y, column_width)
+      self._draw_reading(draw_icon, reading, center_x, center_y, baseline_y, column_width, font_size, unit_size)
 
   @staticmethod
-  def _controls_inactive() -> bool:
-    sm = ui_state.sm
-    if not all(message_is_current(sm, service, ui_state.started_frame) for service in ("carControl", "carState", "onroadEvents")):
-      return False
-    control = sm["carControl"]
-    return not (control.latActive or control.longActive)
+  def _digit_metrics(font: rl.Font, size: int) -> tuple[float, float]:
+    font = font_fallback(font)
+    zero = ord("0")
+    glyph = rl.get_glyph_info(font, zero)
+    height = rl.get_glyph_atlas_rec(font, zero).height
+    scale = size * FONT_SCALE / font.baseSize
+    return (glyph.offsetY + height) * scale, height * scale
 
-  def _draw_reading(self, draw_icon, reading: str, center_x: float, center_y: float, column_width: float) -> None:
+  def _draw_reading(self, draw_icon, reading: str, center_x: float, center_y: float, baseline_y: float,
+                    column_width: float, font_size: int, unit_size: int) -> None:
     value, _, unit = reading.partition(" ")
     muted = rl.Color(174, 185, 199, 255)
-    unit_size = 10
-    unit_width = measure_text_cached(self._unit_font, unit, unit_size).x + 2 if unit else 0
+    unit_width = measure_text_cached(self._unit_font, unit, unit_size).x if unit else 0
+    unit_gap = 3 if unit else 0
     icon_width = 13
-    icon_gap = 4
-    value_width = column_width - icon_width - icon_gap - unit_width - 4
-    font_size = 17
+    icon_gap = 5
     text_size = measure_text_cached(self._value_font, value, font_size)
+    value_width = column_width - icon_width - icon_gap - unit_width - unit_gap - 6
+    if text_size.x > value_width:
+      value_width += 2 + min(1, unit_gap)
+      icon_gap -= 2
+      unit_gap = max(0, unit_gap - 1)
+    if text_size.x > value_width:
+      icon_width = 9
+      value_width += 4
+    if text_size.x > value_width:
+      value_width += 2
     while font_size > 11 and text_size.x > value_width:
       font_size -= 1
       text_size = measure_text_cached(self._value_font, value, font_size)
     if text_size.x > value_width:
       value = UNAVAILABLE
+      unit = ""
+      unit_width = unit_gap = 0
       text_size = measure_text_cached(self._value_font, value, font_size)
 
-    x = center_x - (icon_width + icon_gap + text_size.x + unit_width) / 2
-    draw_icon(x, center_y, muted)
+    x = center_x - (icon_width + icon_gap + text_size.x + unit_width + unit_gap) / 2
+    icon_scale = icon_width / 13
+    rl.rl_push_matrix()
+    rl.rl_translatef(x, center_y, 0)
+    rl.rl_scalef(icon_scale, icon_scale, 1)
+    draw_icon(0, 0, muted)
+    rl.rl_pop_matrix()
     x += icon_width + icon_gap
-    y = center_y - text_size.y / 2
+    value_baseline, _ = self._digit_metrics(self._value_font, font_size)
+    y = baseline_y - value_baseline if value != UNAVAILABLE else center_y - text_size.y / 2
     rl.draw_text_ex(self._value_font, value, rl.Vector2(x, y), font_size, 0, muted if value == UNAVAILABLE else rl.WHITE)
     if unit:
-      unit_height = measure_text_cached(self._unit_font, unit, unit_size).y
-      unit_y = y + (text_size.y - unit_height) * 0.8
-      rl.draw_text_ex(self._unit_font, unit, rl.Vector2(x + text_size.x + 2, unit_y), unit_size, 0, muted)
+      unit_baseline, _ = self._digit_metrics(self._unit_font, unit_size)
+      rl.draw_text_ex(self._unit_font, unit, rl.Vector2(x + text_size.x + unit_gap, baseline_y - unit_baseline), unit_size, 0, muted)
 
   @staticmethod
   def _draw_car_icon(x: float, y: float, color: rl.Color) -> None:

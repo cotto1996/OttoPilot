@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 
 
@@ -15,6 +16,19 @@ def message_is_current(sm, service: str, started_frame: int) -> bool:
 
 def unpack_rgb(color: int) -> RGB:
   return (color >> 16, (color >> 8) & 0xFF, color & 0xFF)
+
+
+def acceleration_wheel_color(sm, started_frame: int) -> RGB:
+  if not message_is_current(sm, "carState", started_frame):
+    return WHITE
+  acceleration = sm["carState"].aEgo
+  if not math.isfinite(acceleration):
+    return WHITE
+  if acceleration > 0.15:
+    return (67, 224, 135)
+  if acceleration < -0.15:
+    return (245, 70, 70)
+  return WHITE
 
 
 @dataclass(frozen=True)

@@ -251,7 +251,7 @@ class AugmentedRoadView(CameraView):
       color = settings.state_color(ui_state.sm, ui_state.started_frame, has_longitudinal_control)
       self._model_renderer.use_control_path_color = settings.dynamic_colors and settings.color_path
       self._model_renderer.control_path_color = color
-      self._hud_renderer.control_indicator_color = color if settings.color_indicators else None
+      self._hud_renderer.lead_stats_border_color = color if settings.color_indicators else None
 
     self._model_renderer.render(self._content_rect)
 

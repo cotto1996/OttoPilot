@@ -2,7 +2,7 @@ import unittest
 from dataclasses import replace
 from types import SimpleNamespace
 
-from openpilot.selfdrive.ui.sunnypilot.mici.onroad.control_colors import DrivingHudSettings
+from openpilot.selfdrive.ui.sunnypilot.mici.onroad.control_colors import WHITE, DrivingHudSettings, acceleration_wheel_color
 from openpilot.selfdrive.ui.sunnypilot.mici.onroad.lead_stats import UNAVAILABLE, lead_readings
 
 
@@ -24,6 +24,16 @@ class DrivingMessages(dict):
 
 
 class TestDrivingHud(unittest.TestCase):
+  def test_wheel_color_follows_measured_acceleration(self):
+    sm = DrivingMessages()
+    for acceleration, color in ((0.5, (67, 224, 135)), (-0.5, (245, 70, 70)), (0.05, WHITE), (float("inf"), WHITE)):
+      with self.subTest(acceleration=acceleration):
+        sm["carState"].aEgo = acceleration
+        assert acceleration_wheel_color(sm, STARTED_FRAME) == color
+    sm["carState"].aEgo = 0.5
+    sm.recv_frame["carState"] = STARTED_FRAME - 1
+    assert acceleration_wheel_color(sm, STARTED_FRAME) == WHITE
+
   def test_colors_follow_active_axes(self):
     cases = [
       (True, True, (32, 216, 117)),
