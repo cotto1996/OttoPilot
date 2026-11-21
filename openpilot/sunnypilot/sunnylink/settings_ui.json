@@ -415,9 +415,9 @@
                     }
                   },
                   "min": 0.1,
-                  "max": 5.0,
+                  "max": 5,
                   "step": 0.1,
-                  "unit": "m/s\u00b2",
+                  "unit": "m/s²",
                   "enablement": [
                     {
                       "type": "param",
@@ -450,8 +450,8 @@
                       "false": "(Offline Only)"
                     }
                   },
-                  "min": 0.0,
-                  "max": 1.0,
+                  "min": 0,
+                  "max": 1,
                   "step": 0.01,
                   "enablement": [
                     {
@@ -485,11 +485,11 @@
                       "label": "Default"
                     },
                     {
-                      "value": 1.0,
+                      "value": 1,
                       "label": "v1.0"
                     },
                     {
-                      "value": 0.0,
+                      "value": 0,
                       "label": "v0.0"
                     }
                   ],
@@ -2333,7 +2333,7 @@
       "label": "Models",
       "icon": "models",
       "order": 10,
-      "remote_configurable": false,
+      "remote_configurable": true,
       "description": "Driving model behavior and camera calibration",
       "sections": [
         {
@@ -2341,6 +2341,17 @@
           "title": "Model Behavior",
           "description": "Lane desire, Blendful lane centering, and lead-vehicle awareness tuning",
           "items": [
+            {
+              "key": "EnableBigModel",
+              "widget": "toggle",
+              "title": "Use Big Model",
+              "description": "Use the Chestnut big model when available. Changes apply the next time openpilot starts.",
+              "enablement": [
+                {
+                  "type": "offroad_only"
+                }
+              ]
+            },
             {
               "key": "Blendful",
               "widget": "toggle",
@@ -2415,6 +2426,11 @@
                 }
               ]
             }
+          ],
+          "enablement": [
+            {
+              "type": "offroad_only"
+            }
           ]
         },
         {
@@ -2458,6 +2474,11 @@
                 }
               ]
             }
+          ],
+          "enablement": [
+            {
+              "type": "offroad_only"
+            }
           ]
         },
         {
@@ -2481,6 +2502,11 @@
                   "equals": true
                 }
               ]
+            }
+          ],
+          "enablement": [
+            {
+              "type": "offroad_only"
             }
           ]
         }
