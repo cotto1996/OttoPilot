@@ -67,6 +67,12 @@ class ModelsLayout(Widget):
       callback=lambda: self._open_source_dialog("chestnut")
     )
 
+    self.big_model_toggle = toggle_item_sp(
+      tr("Use Big Model"),
+      tr("Use the Chestnut big model when available. Changes apply the next time openpilot starts."),
+      param="EnableBigModel",
+    )
+
     self.download_item = download_status_item(lambda: tr("Download") if self._downloading else tr("Model Status"))
 
     self.refresh_item = button_item(tr("Refresh Model List"),
@@ -111,7 +117,7 @@ class ModelsLayout(Widget):
                                         1, None, True, "", style.BUTTON_ACTION_WIDTH, None, True,
                                         lambda v: f"{v / 100:.2f} m")
 
-    self.items = [self.small_model_item, self.big_model_item, self.cancel_download_item, self.download_item, self.refresh_item, self.clear_cache_item,
+    self.items = [self.big_model_toggle, self.small_model_item, self.big_model_item, self.cancel_download_item, self.download_item, self.refresh_item, self.clear_cache_item,
                   self.blendful_toggle, self.lane_turn_desire_toggle, self.lane_turn_value_control, self.lagd_toggle, self.delay_control,
                   self.camera_offset]
 
@@ -369,6 +375,8 @@ class ModelsLayout(Widget):
       self._set_item_note(self.download_item, note)
 
     offroad = ui_state.is_offroad()
+    self.big_model_toggle.action_item.set_enabled(offroad)
+    self.big_model_toggle.set_description(tr("Use the Chestnut big model when available. Changes apply the next time openpilot starts."))
     self.small_model_item.action_item.set_enabled(offroad)
     self.big_model_item.action_item.set_enabled(offroad)
     self.small_model_item.set_description("" if offroad else tr("Only available when vehicle is off, or always offroad mode is on"))

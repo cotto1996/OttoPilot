@@ -603,6 +603,7 @@ class TestActiveBundle(OpenpilotTestCase):
     ):
       chestnut, active, loading, offroad = state
       assert get_active_source(chestnut=chestnut, chestnut_active=active, chestnut_loading=loading, offroad=offroad) == source, state
+    assert get_active_source(chestnut=True, use_big_model=False) == "qcom"
 
   def test_active_bundle_is_the_active_slot(self):
     params = slot_params(qcom=raw_bundle("small"), chestnut=raw_bundle("big"))
@@ -614,6 +615,9 @@ class TestActiveBundle(OpenpilotTestCase):
     with mock.patch("openpilot.sunnypilot.models.helpers.chestnut_present", return_value=True):
       assert get_active_bundle(slot_params(qcom=raw_bundle("small"))) is None, \
         "an empty chestnut slot must not fall back to the qcom pick"
+    disabled_params = slot_params(qcom=raw_bundle("small"), chestnut=raw_bundle("big"))
+    disabled_params.get_bool.return_value = False
+    assert ref_of(get_active_bundle(disabled_params, chestnut=True)) == "small"
 
   def test_empty_catalog_does_not_reset_slot(self):
     params = slot_params(qcom=raw_bundle("small"))

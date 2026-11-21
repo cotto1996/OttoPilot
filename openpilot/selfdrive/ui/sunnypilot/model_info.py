@@ -29,7 +29,7 @@ def model_cache_size_mb() -> float:
 def active_source() -> str:
   return get_active_source(chestnut=ui_state.chestnut_present,
                            chestnut_active=ui_state.chestnut_active, chestnut_loading=ui_state.chestnut_loading,
-                           offroad=ui_state.is_offroad())
+                           offroad=ui_state.is_offroad(), use_big_model=ui_state.params.get_bool("EnableBigModel"))
 
 
 def bundles_for_source(source: str):

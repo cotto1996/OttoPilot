@@ -165,7 +165,8 @@ class UIStateSP:
 
     self._enforce_constraints()
     source = get_active_source(chestnut=self.chestnut_present, chestnut_active=self.chestnut_active,
-                               chestnut_loading=self.chestnut_loading, offroad=self.is_offroad())
+                               chestnut_loading=self.chestnut_loading, offroad=self.is_offroad(),
+                               use_big_model=self.params.get_bool("EnableBigModel"))
     self.active_bundle = self.params.get(ACTIVE_BUNDLE_KEYS[source])
     self.model_runner_tinygrad = self.active_bundle is not None and self.active_bundle.get("runner") == "tinygrad"
     # runner the manager launches (process_config.is_tinygrad_model); with a chestnut the big slot decides

@@ -113,11 +113,12 @@ def get_selected_bundle(params: Params | None = None, source: str = "qcom") -> "
 
 
 def get_active_source(chestnut: bool | None = None, chestnut_active: bool | None = None,
-                      chestnut_loading: bool | None = None, offroad: bool | None = None) -> str:
+                      chestnut_loading: bool | None = None, offroad: bool | None = None,
+                      use_big_model: bool = True) -> str:
   if chestnut is None:
     chestnut = chestnut_present()
   state_valid = chestnut_active is not None or chestnut_loading is not None or offroad is not None
-  big_active = chestnut and (not state_valid or chestnut_active or chestnut_loading or offroad)
+  big_active = use_big_model and chestnut and (not state_valid or chestnut_active or chestnut_loading or offroad)
   return "chestnut" if big_active else "qcom"
 
 
@@ -125,7 +126,7 @@ def get_active_bundle(params: Params | None = None, *, chestnut: bool | None = N
   # no cross-slot fallback: an empty active slot means the hardware default, which
   # only stock modeld can run - modeld_v2 requires a real bundle
   params = params or Params()
-  return get_selected_bundle(params, get_active_source(chestnut=chestnut))
+  return get_selected_bundle(params, get_active_source(chestnut=chestnut, use_big_model=params.get_bool("EnableBigModel")))
 
 
 def resolve_bundle_by_ref(

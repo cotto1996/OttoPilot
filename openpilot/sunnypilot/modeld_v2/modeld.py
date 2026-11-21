@@ -54,6 +54,7 @@ from openpilot.sunnypilot.selfdrive.controls.lib.relc import RoadEdgeLaneChangeC
 
 PROCESS_NAME = "openpilot.selfdrive.modeld.modeld_tinygrad"
 BIG_MODEL_TIMEOUT = 60
+CHESTNUT_STARTUP_DELAY = 30.0
 
 
 def _pkl_exists(path):
@@ -264,12 +265,13 @@ def main(demo=False):
   cloudlog.bind(daemon=PROCESS_NAME)
   setproctitle(PROCESS_NAME)
 
-  CHESTNUT = _find_driving_pkl(get_active_bundle(chestnut=True)) is not None and (chestnut_present() or cable_connected())
+  params = Params()
+  use_big_model = params.get_bool("EnableBigModel")
+  CHESTNUT = use_big_model and _find_driving_pkl(get_active_bundle(chestnut=True)) is not None and (chestnut_present() or cable_connected())
   if CHESTNUT:
     from tinygrad.runtime.ops_amd import AMDDevice
     AMDDevice.wait_timeout_ms = 3000
 
-  params = Params()
   params.put_bool("ChestnutLoading", CHESTNUT)
   params.remove("ChestnutActive")
 
@@ -303,6 +305,9 @@ def main(demo=False):
 
   model = None
   if CHESTNUT:
+    # Give the vehicle time to bring its accessory-powered Chestnut supply online.
+    cloudlog.warning(f"waiting {CHESTNUT_STARTUP_DELAY:.0f}s before starting Chestnut")
+    time.sleep(CHESTNUT_STARTUP_DELAY)
     big_model = None
     def load_big():
       nonlocal big_model
