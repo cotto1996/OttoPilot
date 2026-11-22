@@ -13,6 +13,7 @@ import gzip
 import json
 import os
 import ssl
+import subprocess
 import threading
 import time
 
@@ -20,6 +21,7 @@ from functools import partial
 from openpilot.system.athena.rpc import dispatcher
 from openpilot.common.params import Params, ParamKeyType
 from openpilot.common.realtime import set_core_affinity
+from openpilot.common.time_helpers import system_time_valid
 from openpilot.common.swaglog import cloudlog
 from openpilot.common.hardware.hw import Paths
 from openpilot.system.athena.athenad import ws_send, jsonrpc_handler, \
@@ -240,6 +242,22 @@ def saveParams(params_to_update: dict[str, str], compression: bool = False) -> N
     # disallow modifications to blocked parameters
     if key in BLOCKED_PARAMS:
       cloudlog.warning(f"sunnylinkd.saveParams.blocked: Attempted to modify blocked parameter '{key}'")
+      continue
+
+    # This button is a one-shot command. Its backing param always reads as zero.
+    if key == "SunnylinkUpdateRequest":
+      payload = base64.b64decode(value, validate=True)
+      if compression:
+        payload = gzip.decompress(payload)
+      if payload == b"0":
+        continue
+      if payload != b"1":
+        raise ValueError("Invalid software update request")
+      if not params.get_bool("IsOffroad") or params.get_bool("DisableUpdates"):
+        raise RuntimeError("Software updates must be enabled and the device must be offroad")
+      if not system_time_valid() or params.get("UpdaterState") != "idle":
+        raise RuntimeError("The software updater is not ready")
+      subprocess.run(["pkill", "-SIGHUP", "-f", "openpilot.system.updated.updated"], check=True)
       continue
 
     try:

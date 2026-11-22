@@ -11,6 +11,17 @@ sections:
   title: Updates
   description: Control software updates
   items:
+  - key: SunnylinkUpdateRequest
+    widget: multiple_button
+    title: Software Update
+    description: Check the current branch and download an available update. Restart your device to install it.
+    options:
+    - value: 1
+      label: Update
+    enablement:
+    - $ref: '#/macros/offroad'
+    - {type: param, key: DisableUpdates, equals: false}
+    - {type: param, key: UpdaterState, equals: idle}
   - key: DisableUpdates
     widget: toggle
     title: Disable Updates
