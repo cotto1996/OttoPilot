@@ -5,7 +5,7 @@ import pyray as rl
 from openpilot.common.constants import CV
 from openpilot.selfdrive.ui.sunnypilot.mici.onroad.control_colors import RGB, message_is_current
 from openpilot.selfdrive.ui.ui_state import ui_state
-from openpilot.system.ui.lib.application import FONT_SCALE, font_fallback
+from openpilot.system.ui.lib.application import FONT_SCALE, font_fallback, gui_app
 from openpilot.system.ui.lib.text_measure import measure_text_cached
 from openpilot.system.ui.widgets import Widget
 
@@ -38,6 +38,7 @@ def lead_readings(sm, started_frame: int) -> tuple[str, str, str]:
 class LeadStats(Widget):
   def __init__(self, unit_font: rl.Font, value_font: rl.Font):
     super().__init__()
+    self._portrait = gui_app.texture("icons_mici/onroad/jesus_peeking.png", 54, 30)
     self._unit_font = unit_font
     self._value_font = value_font
     self.border_color: RGB | None = None
@@ -78,6 +79,13 @@ class LeadStats(Widget):
     for i, (draw_icon, reading) in enumerate(zip(icons, readings, strict=True)):
       center_x = content_x + (i + 0.5) * column_width
       self._draw_reading(draw_icon, reading, center_x, center_y, baseline_y, column_width, font_size, unit_size)
+
+    self._draw_jesus_peeking(content_x + column_width / 2, card.y)
+
+  def _draw_jesus_peeking(self, distance_center_x: float, card_top: float) -> None:
+    x = distance_center_x - self._portrait.width / 2
+    y = card_top - self._portrait.height + 2 + math.sin(rl.get_time() * 1.5)
+    rl.draw_texture_v(self._portrait, rl.Vector2(x, y), rl.WHITE)
 
   @staticmethod
   def _digit_metrics(font: rl.Font, size: int) -> tuple[float, float]:
