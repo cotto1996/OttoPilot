@@ -226,6 +226,10 @@ class UIState(UIStateSP):
     detected = self.sm["deviceState"].chestnutPresent
     if not self.started:
       self.chestnut_present = detected
+    if not self.params.get_bool("EnableBigModel"):
+      self.chestnut_state = ChestnutState.DISCONNECTED
+      return
+    if not self.started:
       self.chestnut_state = (ChestnutState.FAILED if self.chestnut_alert else
                              ChestnutState.READY if detected and self.chestnut_compiled else
                              ChestnutState.UNCOMPILED if detected else ChestnutState.DISCONNECTED)
