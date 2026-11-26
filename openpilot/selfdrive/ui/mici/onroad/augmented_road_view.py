@@ -22,6 +22,7 @@ from openpilot.common.transformations.orientation import rot_from_euler
 from enum import IntEnum
 
 if gui_app.sunnypilot_ui():
+  from openpilot.selfdrive.ui.sunnypilot.onroad.blind_spot_indicators import BlindSpotIndicators
   from openpilot.selfdrive.ui.sunnypilot.mici.onroad.hud_renderer import HudRendererSP as HudRenderer
   from openpilot.selfdrive.ui.sunnypilot.ui_state import OnroadTimerStatus
 
@@ -177,6 +178,7 @@ class AugmentedRoadView(CameraView):
     self._navigation = NavigationPanel()
     self._model_renderer = ModelRenderer()
     self._hud_renderer = HudRenderer()
+    self._blind_spot_indicators = BlindSpotIndicators() if gui_app.sunnypilot_ui() else None
     self._long_indicator = None if gui_app.sunnypilot_ui() else LongIndicator()
     self._alert_renderer = AlertRenderer()
     self._driver_state_renderer = DriverStateRenderer()
@@ -289,6 +291,9 @@ class AugmentedRoadView(CameraView):
       self._confidence_ball.render(self.rect)
 
     self._bookmark_icon.render(self.rect)
+    if self._blind_spot_indicators is not None:
+      self._blind_spot_indicators.update()
+      self._blind_spot_indicators.render(self.rect)
 
   def close(self):
     self._navigation.close()

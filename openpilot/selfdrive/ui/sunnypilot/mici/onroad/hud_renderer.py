@@ -13,7 +13,6 @@ from openpilot.selfdrive.ui.mici.onroad import SIDE_PANEL_WIDTH
 from openpilot.selfdrive.ui.mici.onroad.hud_renderer import CRUISE_DISABLED_CHAR, HudRenderer
 from openpilot.selfdrive.ui.sunnypilot.mici.onroad.control_colors import RGB, acceleration_wheel_color, message_is_current
 from openpilot.selfdrive.ui.sunnypilot.mici.onroad.lead_stats import LeadStats
-from openpilot.selfdrive.ui.sunnypilot.onroad.blind_spot_indicators import BlindSpotIndicators
 from openpilot.selfdrive.ui.ui_state import ui_state
 from openpilot.sunnypilot.modeld_v2.blendful import LOOKAHEAD_TIME, MIN_LOOKAHEAD, MIN_SPEED
 from openpilot.system.ui.lib.application import FontWeight, gui_app
@@ -68,7 +67,6 @@ def posted_speed_limit(sm, started_frame: int, is_metric: bool) -> int | None:
 class HudRendererSP(HudRenderer):
   def __init__(self):
     super().__init__()
-    self.blind_spot_indicators = BlindSpotIndicators()
     self._sp_engaged: bool = False
     self._lead_stats = LeadStats(gui_app.font(FontWeight.DISPLAY_REGULAR), self._font_bold)
     self._actual_speed_mph: int | None = None
@@ -77,7 +75,7 @@ class HudRendererSP(HudRenderer):
   def _draw_torque_slot(self, rect: rl.Rectangle) -> None:
     if not ui_state.driving_hud_settings.lead_stats:
       super()._draw_torque_slot(rect)
-    elif self._show_lead_stats():
+    elif self._can_draw_top_icons:
       self._lead_stats.border_color = self.lead_stats_border_color
       self._lead_stats.render(rect)
 
@@ -162,18 +160,14 @@ class HudRendererSP(HudRenderer):
     rl.draw_text_ex(font, text, rl.Vector2(x - bounds.x / 2, y - bounds.y / 2), size, 0, color)
 
   def _model_source_y(self, rect: rl.Rectangle, icon_height: int) -> float:
-    if ui_state.driving_hud_settings.lead_stats and self._show_lead_stats():
+    if ui_state.driving_hud_settings.lead_stats and self._can_draw_top_icons:
       card = LeadStats.card_bounds(rect)
       if card is not None:
         return card.y - icon_height - 8
     return super()._model_source_y(rect, icon_height)
 
-  def _show_lead_stats(self) -> bool:
-    return self._can_draw_top_icons and not self._has_blind_spot_detected()
-
   def _update_state(self) -> None:
     super()._update_state()
-    self.blind_spot_indicators.update()
     sm, started = ui_state.sm, ui_state.started_frame
     self._actual_speed_mph = actual_speed_mph(sm, started)
     self._blendful_level = blendful_correction_level(sm, started, self._blendful_level)
@@ -182,11 +176,3 @@ class HudRendererSP(HudRenderer):
     if sp_engaged != self._sp_engaged:
       self._chestnut_fade_time = rl.get_time() if sp_engaged else 0
     self._sp_engaged = sp_engaged
-
-  def _render(self, rect: rl.Rectangle) -> None:
-    super()._render(rect)
-    self.blind_spot_indicators.render(rect)
-
-  def _has_blind_spot_detected(self) -> bool:
-
-    return self.blind_spot_indicators.detected
