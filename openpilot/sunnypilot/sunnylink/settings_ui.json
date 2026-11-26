@@ -2064,11 +2064,6 @@
                   "type": "param",
                   "key": "DisableUpdates",
                   "equals": false
-                },
-                {
-                  "type": "param",
-                  "key": "UpdaterState",
-                  "equals": "idle"
                 }
               ]
             },
